@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                        http://www.springframework.org/schema/beans/spring-beans.xsd 
+                        http://www.springframework.org/schema/context 
+                        http://www.springframework.org/schema/context/spring-context.xsd 
+                        http://www.springframework.org/schema/aop 
+                        http://www.springframework.org/schema/aop/spring-aop.xsd   
+						http://www.springframework.org/schema/data/jpa
+						http://www.springframework.org/schema/data/jpa/spring-jpa-1.8.xsd
+                        http://www.springframework.org/schema/tx 
+                        http://www.springframework.org/schema/tx/spring-tx.xsd
+                        http://www.springframework.org/schema/security
+                        http://www.springframework.org/schema/security/spring-security.xsd
+						">
+
+	<!-- @Required, @Autowired, @PostConstruct, @PreDestroy, @Resource, @PersistenceContext 
+		and @PersistenceUnit 等注解需要配置相应的bean才可以使用，这里使用context:annotation-config把这些bean一键配置 -->
+	<!-- <context:annotation-config /> -->
+
+	<!-- applicationContext是spring的配置文件，里面配置的bean对springmvc可见，可以被其使用 -->
+	<!-- 作为父容器的spring容器 不需要controller注解，这个注解的实例应该由springmvc提供并使用 -->
+	<!-- context:component-scan配置能够使@Component, @Repository, @Service, @Controller, 
+		@RestController, @ControllerAdvice, and @Configuration 等原型注入spring bean。 
+		同时context:annotation-config配置的功能也被启用，无需再配置。 -->
+	<context:component-scan base-package="com.lwr">
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.web.bind.annotation.RestController" />
+	</context:component-scan>
+
+	<!-- 解析jdbc配置文件内容，然后在配置文件中通过${}使用 -->
+	<context:property-placeholder
+		location="classpath:spring/jdbc.properties" />
+
+	<!-- spring配置数据源无连接池 -->
+	<!-- <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource"> 
+		<property name="driverClassName" value="${jdbc.driverClassName}"/> <property 
+		name="url" value="${jdbc.url}"/> <property name="username" value="${jdbc.username}"/> 
+		<property name="password" value="${jdbc.password}"/> </bean> -->
+
+	<!-- 使用C3P0数据源 -->
+	<bean id="dataSource"
+		class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close">
+		<property name="driverClass" value="${jdbc.driverClassName}" />
+		<property name="jdbcUrl" value="${jdbc.url}" />
+		<property name="user" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="initialPoolSize" value="3" />
+		<property name="minPoolSize" value="3" />
+		<property name="maxPoolSize" value="8" />
+		<!-- 链接用完了自动增量 -->
+		<property name="acquireIncrement" value="5" />
+		<!-- 每600秒查连接池中的所有空闲连接，超过mysql长连接wait_timeout（在MySQL中设置）将会被回收， 导致该连接为无效连接。Default: 
+			0 不检查 -->
+		<property name="idleConnectionTestPeriod" value="600" />
+		<property name="preferredTestQuery" value="select 1" />
+		<!-- 如果设为true那么在取得连接的同时将校验连接的有效性。若检测为无效，则自动重新获取连接。default: false -->
+		<property name="testConnectionOnCheckin" value="true" />
+	</bean>
+
+	<!-- <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"> 
+		<property name="dataSource" ref="dataSource" /> </bean> -->
+
+	<!-- 创建 Hibernate 上下文对象 -->
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<!-- 数据源 -->
+		<property name="dataSource" ref="dataSource" />
+		<!-- jpa适配器 -->
+		<property name="jpaVendorAdapter">
+			<bean
+				class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+				<!-- 支持的数据库类型 -->
+				<property name="Database" value="MYSQL" />
+				<!-- 正向工程 -->
+				<!-- <property name="generateDdl" value="false" /> -->
+				<!-- 控制台输出sql -->
+				<property name="showSql" value="true" />
+			</bean>
+		</property>
+		<!-- 包扫描 -->
+		<property name="packagesToScan">
+			<list>
+				<value>com.lwr.entity</value>
+			</list>
+		</property>
+	</bean>
+	<!-- 注册dao层 -->
+	<jpa:repositories base-package="com.lwr.dao" 
+		entity-manager-factory-ref="entityManagerFactory" 
+		transaction-manager-ref="transactionManager"/>
+
+	<!-- 配置Hibernate的事务管理器 -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory"
+			ref="entityManagerFactory"></property>
+	</bean>
+
+	<!-- 即使实现了接口，也强制使用cglib动态代理不再默认使用jdk代理,jdk8之后的jdk代理性能也不错了 -->
+	<!-- <aop:aspectj-autoproxy proxy-target-class="true"/> -->
+
+	<!-- 第一种事务方式：开始事务注解@Transactional，加了这个注解的类或方法自动配置事务 -->
+	<tx:annotation-driven
+		transaction-manager="transactionManager" />
+
+
+    <!-- 配置spring-security相关 -->
+	<!-- <import resource="spring-security-test.xml" /> -->
+	<!-- <import resource="spring-security-my.xml" /> -->
+    
+	<import resource="spring-beans.xml" />
+
+</beans>

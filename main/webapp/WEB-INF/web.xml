@@ -1,0 +1,76 @@
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+<web-app>
+  <display-name>Archetype Created Web Application</display-name>
+  <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath:spring/applicationContext.xml</param-value>
+        <!-- <param-value>classpath:spring/spring-*.xml</param-value> -->
+    </context-param>
+
+	<!-- 强制编码转换 -->
+	<filter>
+		<filter-name>characterEncodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		<!-- forceEncoding：强制覆盖request和response的编码，默认false -->
+		<init-param>
+			<param-name>forceEncoding</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>characterEncodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	
+	<!-- DelegatingFilterProxy实现了Filter接口，当容器加载并执行它的doFilter()方法时， doFilter()方法会根据filter名称去application容器上下文中找到名称相同的Filter对象， 
+	        然后把这个对象植入到当前DelegatingFilterProxy中的delegate属性，以后每次调用DelegatingFilterProxy过滤器， 
+	        实际上是调用delegate.doFilter(request, response, filterChain); -->
+    <filter>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!-- spring容器初始化监听器 -->
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+
+    <servlet>
+        <servlet-name>dispatcherServlet</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>classpath:spring/springmvc.xml</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>dispatcherServlet</servlet-name>
+        <!-- 斜杆/表示拦截所有请求，包括静态资源 -->
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+    
+    <error-page >
+        <error-code>403</error-code>
+        <location>/403.html</location>
+    </error-page>
+    <error-page >
+        <error-code>404</error-code>
+        <location>/404.html</location>
+    </error-page>
+    <error-page >
+        <error-code>500</error-code>
+        <location>/500.html</location>
+    </error-page>
+</web-app>

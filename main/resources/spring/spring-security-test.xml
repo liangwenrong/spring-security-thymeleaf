@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                        http://www.springframework.org/schema/beans/spring-beans.xsd 
+                        http://www.springframework.org/schema/security
+                        http://www.springframework.org/schema/security/spring-security.xsd
+						">
+    <!-- 当前配置全部使用security默认，登陆页、内置用户 -->
+
+
+    <!-- 放开静态资源访问权限(不会经过security过滤器链) -->
+    <security:http pattern="/static/**" security="none"/>
+
+
+    <security:http auto-config="true" use-expressions="true">
+        <!-- 拦截url，需要角色权限 -->
+        <security:intercept-url pattern="/**" access="hasAnyRole('ROLE_USER')"/>
+        <!-- 关闭post请求强制要求csrf token -->
+        <security:csrf disabled="true"/>
+    </security:http>
+
+    
+    <security:authentication-manager>
+        <security:authentication-provider>
+            <security:user-service>
+                <security:user name="user" password="{noop}user123" authorities="ROLE_USER"/>            
+                <security:user name="admin" password="{noop}admin123" authorities="ROLE_ADMIN"/>            
+            </security:user-service>
+        </security:authentication-provider>
+    </security:authentication-manager>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</beans>

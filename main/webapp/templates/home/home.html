@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" 
+        xmlns:th="http://www.thymeleaf.org" 
+        xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <base th:replace="head/head :: base">
+    <meta th:replace="head/head :: meta">
+    <title>Test</title>
+</head>
+<body>
+<h1>TEST</h1>
+<h2>Thymeleaf</h2>
+<!--th:text 设置当前元素的文本内容，常用，优先级不高-->
+<p sec:authentication="name" />
+<form method="post" action="logout">
+<button type="submit">退出登录</button>
+</form>
+<p th:text="${thText}" />
+<p th:text="${reqA}" />
+<p th:text="${session}" />
+<p th:text="${param.a}" />
+<p th:utext="${thUText}" />
+
+<!--th:value 设置当前元素的value值，常用，优先级仅比th:text高-->
+<input type="text" th:value="${thValue}" />
+
+<!--th:each 遍历列表，常用，优先级很高，仅此于代码块的插入-->
+<!--th:each 修饰在div上，则div层重复出现，若只想p标签遍历，则修饰在p标签上-->
+<div th:each="message : ${thEach}"> <!-- 遍历整个div-p，不推荐-->
+    <p th:text="${message}" />
+</div>
+<div> <!--只遍历p，推荐使用-->
+    <p th:each="message : ${thEach}" >
+    <span th:text="${message}"/>
+    </p>
+</div>
+
+<!--th:if 条件判断，类似的有th:switch，th:case，优先级仅次于th:each, 其中#strings是变量表达式的内置方法-->
+<p th:text="${thIf}" th:if="${not #strings.isEmpty(thIf)}"></p>
+
+<!--th:insert 把代码块插入当前div中，优先级最高，类似的有th:replace，th:include，~{} ：代码块表达式 -->
+<!-- <div th:insert="~{grammar/common::thCommon}"></div> -->
+
+<!--th:object 声明变量，和*{} 一起使用-->
+<div th:object="${thObject}">
+    <p>ID: <span th:text="*{id}" /></p><!--th:text="${thObject.id}"-->
+    <p>TH: <span th:text="*{name}" /></p><!--${thObject.thName}-->
+</div>
+</body>
+</html>

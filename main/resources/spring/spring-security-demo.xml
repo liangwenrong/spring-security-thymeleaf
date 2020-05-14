@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:security="http://www.springframework.org/schema/security"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                        http://www.springframework.org/schema/beans/spring-beans.xsd 
+                        http://www.springframework.org/schema/security
+                        http://www.springframework.org/schema/security/spring-security.xsd
+                        ">
+
+    <!-- 放开静态资源访问权限(不会经过security过滤器链) -->
+    <security:http pattern="/static/**" security="none"/>
+
+    <security:http auto-config="true" use-expressions="true">
+        <security:intercept-url pattern="/tologin" access="permitAll()"/>
+        <security:intercept-url pattern="/doLogin" access="permitAll()"/>
+        <security:intercept-url pattern="/**" access="hasAnyRole('ROLE_USER')"/>
+        <security:form-login />
+    </security:http>
+    
+
+     <bean id="bcryptEncoder"
+        class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
+    <!-- 
+            二、 认证管理器
+             1、引用userDetailService作为用户登录验证的服务类
+             2、设置密码加密方式
+      -->
+    <security:authentication-manager alias="authenticationManager">
+        <!-- 注入自定义认证类对象 -->
+        <security:authentication-provider user-service-ref='userServiceImpl'>
+            <!-- 注入加密算法类 -->
+            <security:password-encoder ref="bcryptEncoder"></security:password-encoder>
+        </security:authentication-provider>
+    </security:authentication-manager>
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</beans>

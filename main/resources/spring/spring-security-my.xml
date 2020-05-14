@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:security="http://www.springframework.org/schema/security"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                        http://www.springframework.org/schema/beans/spring-beans.xsd 
+                        http://www.springframework.org/schema/security
+                        http://www.springframework.org/schema/security/spring-security.xsd
+                        ">
+
+    <!-- 放开静态资源访问权限(不会经过security过滤器链) -->
+    <security:http pattern="/static/**" security="none"/>
+
+    <security:http auto-config="false" entry-point-ref="authenticationEntryPoint">
+	    <security:csrf disabled="true"/>
+		<security:headers>
+			<security:frame-options policy="SAMEORIGIN" />
+		</security:headers>
+        <!-- 放开登录提交 -->
+        <security:intercept-url pattern="/doLogin" access="permitAll()"/> 
+        <!-- 只需要登录，不校验角色 --><!-- /**放到最后，按顺序 -->
+        <security:intercept-url pattern="/**" access="isAuthenticated()"/> 
+        <!-- <security:form-login /> -->
+                   
+	    <!-- 
+	    before/after/position=
+	    - FIRST
+	    - CHANNEL_FILTER
+	    - SECURITY_CONTEXT_FILTER
+	    - CONCURRENT_SESSION_FILTER
+	    - WEB_ASYNC_MANAGER_FILTER
+	    - HEADERS_FILTER
+	    - CORS_FILTER
+	    - CSRF_FILTER
+	    - LOGOUT_FILTER
+	    - OAUTH2_AUTHORIZATION_REQUEST_FILTER
+	    - X509_FILTER
+	    - PRE_AUTH_FILTER
+	    - CAS_FILTER
+	    - OAUTH2_LOGIN_FILTER
+	    - FORM_LOGIN_FILTER
+	    - OPENID_FILTER
+	    - LOGIN_PAGE_FILTER
+	    - LOGOUT_PAGE_FILTER
+	    - DIGEST_AUTH_FILTER
+	    - BEARER_TOKEN_AUTH_FILTER
+	    - BASIC_AUTH_FILTER
+	    - REQUEST_CACHE_FILTER
+	    - SERVLET_API_SUPPORT_FILTER
+	    - JAAS_API_SUPPORT_FILTER
+	    - REMEMBER_ME_FILTER
+	    - ANONYMOUS_FILTER
+	    - OAUTH2_AUTHORIZATION_CODE_GRANT_FILTER
+	    - SESSION_MANAGEMENT_FILTER
+	    - EXCEPTION_TRANSLATION_FILTER
+	    - FILTER_SECURITY_INTERCEPTOR
+	    - SWITCH_USER_FILTER
+	    - LAST 
+	    --> 
+        <!-- <security:custom-filter ref="myFilter" before="FILTER_SECURITY_INTERCEPTOR"/> -->
+        <security:custom-filter ref="myUsernamePasswordAuthenticationFilter" position="FORM_LOGIN_FILTER"/>
+        
+        <security:logout logout-url="/logout"
+            invalidate-session="true"
+            delete-cookies="JSESSIONID"
+            
+        /><!-- success-handler-ref="logoutHandler" -->
+    </security:http>
+        
+    <bean id="authenticationEntryPoint" class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">  
+            <constructor-arg value="/tologin"/><!-- 构造参数：登陆页地址 -->
+            <property name="useForward" value="true"/><!-- 是Forward还是redirect（绝对地址必须false） -->
+    </bean>
+    
+    <bean id="myUsernamePasswordAuthenticationFilter" class="com.lwr.security.filter.MyUsernamePasswordAuthenticationFilter">
+        <property name="authenticationManager" ref="authenticationManager" />  
+        <!-- 自定义LoginFailHandler需要继承AuthenticationFailureHandler -->
+        <property name="authenticationFailureHandler" ref="loginFailHandler" />  
+        <!-- <property name="authenticationSuccessHandler" ref="loginSuccessHandler" />   -->
+        <property name="filterProcessesUrl" value="/doLogin" />  
+    </bean> 
+	
+     <bean id="loginFailHandler"
+        class="com.lwr.security.handler.LoginFailHandler" />
+    
+     <bean id="bcryptEncoder"
+        class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
+    <!-- 
+            二、 认证管理器
+             1、引用userDetailService作为用户登录验证的服务类
+             2、设置密码加密方式
+      -->
+    <security:authentication-manager alias="authenticationManager">
+        <!-- 注入自定义认证类对象 -->
+        <security:authentication-provider user-service-ref='userServiceImpl'>
+            <!-- 注入加密算法类 -->
+            <security:password-encoder ref="bcryptEncoder"/>
+        </security:authentication-provider>
+    </security:authentication-manager>
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</beans>
